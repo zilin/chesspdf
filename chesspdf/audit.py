@@ -40,9 +40,11 @@ def load_env() -> None:
             return
 
 
-def load_problems() -> dict[str, dict]:
+def load_problems(book: Path | str | None = None) -> dict[str, dict]:
+    """`book` overrides the CHESSPDF_BOOK default (the review app serves
+    several books from one process)."""
     problems = {}
-    for path in (HERE / "problem_jsons").glob("*.json"):
+    for path in (Path(book) if book else HERE).joinpath("problem_jsons").glob("*.json"):
         try:
             data = json.loads(path.read_text())
         except json.JSONDecodeError:
@@ -58,9 +60,9 @@ def solution_key(raw_id: str) -> str:
     return m.group(1) if m else raw_id.replace("*", "")
 
 
-def load_solutions() -> dict[str, str]:
+def load_solutions(book: Path | str | None = None) -> dict[str, str]:
     solutions = {}
-    for path in (HERE / "solution_jsons").glob("*.json"):
+    for path in (Path(book) if book else HERE).joinpath("solution_jsons").glob("*.json"):
         try:
             data = json.loads(path.read_text())
         except json.JSONDecodeError:
@@ -70,10 +72,10 @@ def load_solutions() -> dict[str, str]:
     return solutions
 
 
-def load_solution_names() -> dict[str, str]:
+def load_solution_names(book: Path | str | None = None) -> dict[str, str]:
     """Game attributions ('Ebralidze-Blagidze, Tbilisi 1949') when printed."""
     names = {}
-    for path in (HERE / "solution_jsons").glob("*.json"):
+    for path in (Path(book) if book else HERE).joinpath("solution_jsons").glob("*.json"):
         try:
             data = json.loads(path.read_text())
         except json.JSONDecodeError:

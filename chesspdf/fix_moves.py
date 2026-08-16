@@ -26,7 +26,8 @@ from pathlib import Path
 import chess
 
 from .audit import load_env, load_problems, load_solutions, solution_key
-from .chesslib import first_mover, mainline_tokens, rebuild_movetext, replay_sans, tail_replays
+from .chesslib import (SAN_RE, disambiguate_line, first_mover, mainline_tokens,
+                       rebuild_movetext, replay_sans, tail_replays)
 
 HERE = Path(os.environ.get("CHESSPDF_BOOK", "books/imagination")).resolve()
 OUT = HERE / "moves_fixes.jsonl"
@@ -52,7 +53,9 @@ def gap_fill(fen: str, turn: str, sans: list[str]) -> tuple[list[str] | None, st
 
 def san_repair(fen: str, turn: str, sans: list[str]) -> tuple[list[str] | None, str]:
     """If the breaking SAN is itself corrupt, accept the unique legal move
-    sharing its destination square."""
+    sharing its destination square (and, when present, its from-file/rank
+    hint: what OCR gets wrong is the piece figurine — 'Rde7' read as 'Nde7' —
+    while the algebraic characters beside it are plain text and reliable)."""
     i, board = replay_sans(fen, turn, sans)
     if i == len(sans):
         return sans, "already-legal"
@@ -61,14 +64,30 @@ def san_repair(fen: str, turn: str, sans: list[str]) -> tuple[list[str] | None, 
     if not dest:
         return None, "no destination square in token"
     target = chess.parse_square(dest[-1])
-    cands = []
-    for mv in board.legal_moves:
-        if mv.to_square == target:
+
+    def survivors(matches) -> list[str]:
+        out = []
+        for mv in board.legal_moves:
+            if mv.to_square != target or not matches(mv):
+                continue
             b2 = board.copy()
             san = b2.san(mv)
             b2.push(mv)
             if tail_replays(b2, sans[i + 1:]):
-                cands.append(san)
+                out.append(san)
+        return out
+
+    m = SAN_RE.match(bad.rstrip("!?"))
+    ff, fr = (m.group("ff"), m.group("fr")) if m else (None, None)
+    if ff or fr:
+        cands = survivors(
+            lambda mv: (not ff or chess.square_file(mv.from_square) == ord(ff) - 97)
+            and (not fr or chess.square_rank(mv.from_square) == int(fr) - 1))
+        if len(cands) == 1:
+            return (sans[:i] + cands + sans[i + 1:],
+                    f"replaced '{bad}' with '{cands[0]}' (kept its from-square hint)")
+
+    cands = survivors(lambda mv: True)
     if len(cands) == 1:
         return sans[:i] + cands + sans[i + 1:], f"replaced '{bad}' with '{cands[0]}'"
     return None, f"'{bad}': {len(cands)} same-destination candidates"
@@ -118,6 +137,8 @@ def reocr(pid: str, page: Path) -> str | None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ids", default=None)
+    parser.add_argument("--force", action="store_true",
+                        help="redo --ids even if already in moves_fixes.jsonl")
     args = parser.parse_args()
 
     problems = load_problems()
@@ -130,27 +151,61 @@ def main() -> None:
             if r.get("status") in ("FIXED", "SHIFT_FIXED", "MOVES_SUSPECT"):
                 fixes[r["id"]] = r
 
+    # Human verdicts outrank every automated source — including for the FEN a
+    # repair is computed against. A repair derived from a FEN the human later
+    # corrected is invalid, so re-running those ids needs --force.
+    overrides = {}
+    opath = HERE / "human_overrides.jsonl"
+    if opath.exists():
+        for line in opath.read_text().splitlines():
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if r.get("verdict") != "exclude":
+                overrides[r["id"]] = r
+
     if args.ids:
         targets = [i.strip() for i in args.ids.split(",")]
     else:
         targets = [pid for pid, r in fixes.items() if r["status"] == "MOVES_SUSPECT"]
 
     done = set()
+    best: dict[str, dict] = {}       # id -> the best repair seen so far
     if OUT.exists():
-        done = {json.loads(l)["id"] for l in OUT.read_text().splitlines() if l.strip()}
+        for line in OUT.read_text().splitlines():
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            done.add(r["id"])
+            if r.get("status") in ("REPAIRED", "REOCRED") and r.get("moves"):
+                best[r["id"]] = r
+    if args.force:
+        done -= set(targets)
 
     counts: dict[str, int] = {}
     for pid in targets:
         if pid in done or pid not in solutions:
             continue
         moves = solutions[pid]
-        fen = fixes.get(pid, {}).get("fen") or problems[pid]["fen"].split()[0]
-        turn = first_mover(moves) or fixes.get(pid, {}).get("to_move") \
-            or problems[pid].get("to_move", "w")
+        ov = overrides.get(pid, {})
+        fen = ov.get("fen") or fixes.get(pid, {}).get("fen") \
+            or problems[pid]["fen"].split()[0]
+        turn = ov.get("to_move") or first_mover(moves) \
+            or fixes.get(pid, {}).get("to_move") or problems[pid].get("to_move", "w")
         sans = mainline_tokens(moves)
         rec = {"id": pid, "fen": fen, "to_move": turn}
 
+        # printed SAN is often under-disambiguated ('Re7' with two rooks
+        # reaching e7); resolve before any repair so later passes see a
+        # strictly legal line
+        pre = ""
+        resolved = disambiguate_line(fen, turn, sans)
+        if resolved is not None and resolved != sans:
+            sans, pre = resolved, "disambiguated printed SAN; "
+
         fixed, note = gap_fill(fen, turn, sans)
+        note = pre + note
         if fixed is None:
             fixed, note2 = san_repair(fen, turn, sans)
             note = f"{note}; {note2}"
@@ -180,6 +235,15 @@ def main() -> None:
                                reocr_text=new_text.strip()[:400])
             else:
                 rec.update(status="UNREPAIRED", note=note)
+        # Re-OCR is non-deterministic, so a --force rerun can come back empty
+        # where an earlier attempt succeeded. Never let a failed retry bury a
+        # repair that was already verified.
+        prior = best.get(pid)
+        if rec["status"] == "UNREPAIRED" and prior is not None:
+            print(f"{pid:>6s} kept earlier {prior['status']} (retry failed)")
+            counts["KEPT"] = counts.get("KEPT", 0) + 1
+            continue
+        best[pid] = rec if rec["status"] in ("REPAIRED", "REOCRED") and rec.get("moves") else prior
         counts[rec["status"]] = counts.get(rec["status"], 0) + 1
         with OUT.open("a") as f:
             f.write(json.dumps(rec) + "\n")

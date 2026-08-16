@@ -94,6 +94,8 @@ def cmd_import_legacy(args: argparse.Namespace) -> None:
                 status = "approved"
                 fen, fen_src = ov.get("fen", fen).split()[0] or fen, "human"
                 turn = ov.get("to_move", turn)
+                if ov.get("moves"):        # human-corrected solution text
+                    moves, moves_src = ov["moves"], "human"
 
         p = Puzzle(pid, {
             "id": pid, "image": images.get(pid, Path("")).name or None,

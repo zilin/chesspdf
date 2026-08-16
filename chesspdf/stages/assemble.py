@@ -14,7 +14,8 @@ import chess
 import chess.pgn
 
 from ..bundle import Bundle
-from ..chesslib import strip_variations, structural_check, transform_book_variations, try_parse
+from ..chesslib import (full_fen, strip_variations, structural_check,
+                        transform_book_variations, try_parse)
 
 
 def run(bundle: Bundle) -> dict[str, int]:
@@ -82,7 +83,7 @@ def run(bundle: Bundle) -> dict[str, int]:
         hint = "{ " + re.sub(r"[{}]", "'", str(p.hint).strip()) + " } " if p.hint else ""
         problems.append(
             "\n".join(f'[{k} "{v}"]' for k, v in headers.items())
-            + f'\n[SetUp "1"]\n[FEN "{fen} {turn} - - 0 1"]\n\n{hint}*'
+            + f'\n[SetUp "1"]\n[FEN "{full_fen(fen, turn)}"]\n\n{hint}*'
         )
         if game is not None:
             result = game.headers.get("Result", "*")
@@ -100,7 +101,7 @@ def run(bundle: Bundle) -> dict[str, int]:
                 body = "{ Book solution (text): " + re.sub(r"[{}]", "'", moves.strip()) + " } "
             text = (
                 "\n".join(f'[{k} "{v}"]' for k, v in headers.items())
-                + f'\n[SetUp "1"]\n[FEN "{fen} {turn} - - 0 1"]\n\n{body}*'
+                + f'\n[SetUp "1"]\n[FEN "{full_fen(fen, turn)}"]\n\n{body}*'
             )
             review.append(text)
             solutions.append(text)

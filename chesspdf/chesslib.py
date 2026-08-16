@@ -150,6 +150,69 @@ def replay_sans(fen: str, turn: str, sans: list[str]) -> tuple[int, chess.Board]
     return len(sans), board
 
 
+SAN_RE = re.compile(
+    r"^(?P<pc>[KQRBN])?(?P<ff>[a-h])?(?P<fr>[1-8])?x?(?P<to>[a-h][1-8])"
+    r"(?:=(?P<promo>[QRBN]))?[+#]?$")
+_PTYPE = {"K": chess.KING, "Q": chess.QUEEN, "R": chess.ROOK,
+          "B": chess.BISHOP, "N": chess.KNIGHT}
+
+
+def san_candidates(board: chess.Board, token: str) -> list[chess.Move]:
+    """Every legal move an under-disambiguated SAN token could denote."""
+    m = SAN_RE.match(token.rstrip("!?"))
+    if not m:
+        return []
+    to_sq = chess.parse_square(m.group("to"))
+    ptype = _PTYPE.get(m.group("pc"), chess.PAWN)
+    promo = _PTYPE.get(m.group("promo"))
+    out = []
+    for mv in board.legal_moves:
+        if mv.to_square != to_sq or board.piece_type_at(mv.from_square) != ptype:
+            continue
+        if mv.promotion != promo:
+            continue
+        if m.group("ff") and chess.square_file(mv.from_square) != ord(m.group("ff")) - 97:
+            continue
+        if m.group("fr") and chess.square_rank(mv.from_square) != int(m.group("fr")) - 1:
+            continue
+        out.append(mv)
+    return out
+
+
+def disambiguate_line(fen: str, turn: str, sans: list[str],
+                      max_states: int = 4000) -> list[str] | None:
+    """Books print ambiguous SAN ('Re7' where two rooks reach e7); strict PGN
+    needs 'R8e7'. Search the disambiguations and return the resolution that
+    replays the WHOLE line — only if it is unique (several ambiguous plies can
+    compound, so this is a search, not a per-token fix). None if unresolvable;
+    other kinds of error are left to the repair passes."""
+    results: list[list[str]] = []
+    stack = [(chess.Board(full_fen(fen, turn)), 0, [])]
+    states = 0
+    while stack:
+        board, i, out = stack.pop()
+        states += 1
+        if states > max_states:
+            return None
+        if i == len(sans):
+            results.append(out)
+            if len(results) > 1:
+                return None          # genuinely ambiguous: a human decides
+            continue
+        try:
+            moves = [board.parse_san(sans[i])]
+        except chess.AmbiguousMoveError:
+            moves = san_candidates(board, sans[i])
+        except ValueError:
+            moves = []               # a different defect; this branch dies
+        for mv in moves:
+            b2 = board.copy()
+            san = b2.san(mv)
+            b2.push(mv)
+            stack.append((b2, i + 1, out + [san]))
+    return results[0] if len(results) == 1 else None
+
+
 def tail_replays(board: chess.Board, sans: list[str]) -> bool:
     b = board.copy()
     for san in sans:
