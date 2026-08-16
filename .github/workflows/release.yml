@@ -1,0 +1,19 @@
+name: release
+
+# Publish to PyPI via Trusted Publishing (OIDC, no token) on version tags:
+#   git tag v0.2.0 && git push --tags
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write        # OIDC for PyPI Trusted Publishing
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1
