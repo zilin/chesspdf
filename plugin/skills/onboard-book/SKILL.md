@@ -50,6 +50,10 @@ magic numbers in scripts.
 
 ## Decision: which template
 
+Three shapes, decided by the probe output. Take the cheapest one that fits:
+text costs nothing and cannot be misread, so let a model see only what is
+genuinely pictorial.
+
 **A. Born-digital with a diagram font** (`born_digital: true` and a
 `diagram_font_candidates` entry like Chess-Merida): boards are TEXT.
 Zero vision calls needed. `chesspdf template borndigital books/<name>`
@@ -61,7 +65,18 @@ every number to this book):
   space-loss, doubled text layers, per-color overlay layers)
 - solutions: parse text spans (bold = mainline is a common house style)
 
-**B. Scanned** (`born_digital: false`, full-page images): vision pipeline.
+**B. Born-digital with vector diagrams** (`born_digital: true` but
+`diagram_font_candidates` empty — the common modern PDF): headers, hints and
+the whole solutions section come free from the text layer; only the boards
+need a model. `chesspdf template vector books/<name>` scaffolds:
+- ingest.py: CV board-border detection (same detector as C)
+- recognize.py: one flash call per cell for the diagram
+- solutions.py: parse the solutions section from the text layer — no OCR,
+  so those cannot be misread at all
+Measured on the generated sample book: 100/100 cells, 100/100 solutions,
+100/100 exact FENs, fix cascade never needed.
+
+**C. Scanned** (`born_digital: false`, full-page images): everything visual.
 `chesspdf template scanned books/<name>` scaffolds the drivers (refit
 layout.json to this book):
 - ingest: CV board-border detection (long dark runs per page half), cell =
@@ -72,8 +87,13 @@ layout.json to this book):
 - solutions: one flash call per page -> PGN movetext per entry, with
   cross-page continuation stitching; normalize ids to numeric-prefix form
 
-**Neither fits** (no numbered anchors, mixed layouts): see "When you are
-stuck". Do not improvise a third architecture silently.
+**None fits** (no numbered anchors, mixed layouts): see "When you are
+stuck". Do not improvise a fourth architecture silently.
+
+To rehearse the whole flow first, `chesspdf sample --out sample_book.pdf`
+writes a CC0 book plus `truth.json`; `chesspdf score --book <dir>` then
+grades a run against that answer key (exit code non-zero on any wrong
+position). Real books have no answer key — there, replay is the oracle.
 
 ## Fix cascade (scanned books; order matters)
 

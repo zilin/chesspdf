@@ -28,6 +28,19 @@ uv tool install chesspdf        # or: pipx install chesspdf
 export GEMINI_API_KEY=...       # only needed for scanned books
 ```
 
+## Try it in one minute
+
+```sh
+chesspdf sample --out sample_book.pdf     # a CC0 book + its answer key
+chesspdf probe probe sample_book.pdf      # what kind of book is this?
+```
+
+`sample` typesets 100 puzzles from the Lichess database (CC0) as a real
+exercise book — numbered diagrams, hints, a solutions section in algebraic
+notation — and writes `truth.json` beside it. Because the answers are known,
+`chesspdf score` grades a pipeline run outright instead of asking you to
+check it.
+
 ## Quickstart
 
 ```sh

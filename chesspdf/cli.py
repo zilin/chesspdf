@@ -164,17 +164,27 @@ def main() -> None:
     for name, module, help_ in (
             ("probe", "chesspdf.probe", "inspect a PDF / render pages / book state (JSON)"),
             ("template", "chesspdf.templates", "scaffold a book folder from a pipeline template"),
+            ("sample", "chesspdf.sample", "generate a CC0 sample book + answer key"),
+            ("score", "chesspdf.score", "grade a run against a generated book's answer key"),
             ("audit", "chesspdf.audit", "consistency audit (replay verification)"),
             ("fix-fens", "chesspdf.fix_fens", "re-recognize + repair failing FENs"),
             ("fix-moves", "chesspdf.fix_moves", "gap-fill + re-OCR broken solutions"),
             ("fix-shifts", "chesspdf.fix_shifts", "zero-cost whole-board shift repair"),
             ("build", "chesspdf.build_pgn", "legacy flat-layout PGN build"),
             ("review", "chesspdf.review_app", "launch the human review web app")):
+        # no arguments declared: everything after the subcommand is collected
+        # by parse_known_args below, in order, and handed to the module
         p = sub.add_parser(name, help=help_)
-        p.add_argument("rest", nargs=argparse.REMAINDER)
-        p.set_defaults(fn=lambda a, m=module: _delegate(m, a.rest))
+        p.set_defaults(fn=lambda a, m=module: _delegate(m, a.rest), delegate=True)
 
-    args = parser.parse_args()
+    # argparse.REMAINDER stops collecting when the first token after the
+    # subcommand is an option, so gather those separately and hand the whole
+    # tail to the delegate.
+    args, unknown = parser.parse_known_args()
+    if getattr(args, "delegate", False):
+        args.rest = unknown
+    elif unknown:
+        parser.error(f"unrecognized arguments: {' '.join(unknown)}")
     import os
     os.environ["CHESSPDF_BOOK"] = str(Path(args.book).resolve())
     args.fn(args)

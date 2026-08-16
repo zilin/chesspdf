@@ -245,7 +245,6 @@ def build_dataset(book: Path) -> list[dict]:
             "id": pid, "fen": fen, "to_move": turn, "source": source,
             "audit": astat, "review": review,
             "image": f"/img/{book.name}/{images[pid].name}",
-            "moves": (moves or "")[:300],
             "verdict": (ov or {}).get("verdict"),
             "eff_moves": eff_moves or "",
             "breaks_at": breaks_at,
@@ -294,11 +293,21 @@ header select, header button { font-size: 14px; padding: 4px 8px; }
                  border-radius: 6px; display: flex; align-items: center;
                  justify-content: center; }
 .palcol button.active { background: #ffd76e; border-color: #b98; }
-#fen, #soltext { width: 100%; font-family: monospace; font-size: 13px; padding: 6px;
-                 box-sizing: border-box; }
-#solbox { display: none; margin-top: 8px; }
-#solbox label { display: block; font-size: 12px; color: #777; margin-bottom: 3px; }
-#moves { font-size: 12px; color: #555; max-width: 480px; white-space: pre-wrap; margin-top: 8px; }
+#fen { width: 100%; font-family: monospace; font-size: 13px; padding: 6px;
+       box-sizing: border-box; }
+#solbox { margin-top: 10px; }
+#solhead { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #777;
+           margin-bottom: 3px; }
+#soledit { font-size: 11px; padding: 1px 8px; border: 1px solid #bbb; background: #f2f0eb;
+           border-radius: 5px; cursor: pointer; color: #444; }
+/* the read-only view and the editor must look identical, so toggling 编辑
+   changes only whether you can type */
+#solview, #soltext { width: 100%; box-sizing: border-box; font: inherit;
+                     font-size: 12px; line-height: 1.5; color: #555;
+                     white-space: pre-wrap; background: #faf9f6;
+                     border: 1px solid #eae7df; border-radius: 6px; padding: 6px 8px; }
+#soltext { display: none; resize: vertical; }
+#soltext:focus { border-color: #b9b3a5; outline: none; background: #fff; }
 .actions { display: flex; gap: 10px; margin-top: 12px; }
 .actions button { font-size: 15px; padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer; }
 .actions button:disabled { opacity: .35; cursor: default; }
@@ -320,7 +329,8 @@ kbd { font: inherit; font-size: .8em; line-height: 1.4; padding: 0 4px; margin-l
   #diagram { width: auto; max-width: 100%; height: auto; max-height: 30vh; margin: 0 auto; }
   /* no height cap: the smaller board leaves room to show the whole panel */
   #prov { font-size: 11px; line-height: 1.45; padding: 5px 7px; margin: 5px 0; }
-  #moves { display: none; }
+  #solview, #soltext { font-size: 11px; }
+  #solview { max-height: 9em; overflow-y: auto; }
   #boardrow { gap: 6px; }
   .palcol { gap: 4px; }
   .palcol button { font-size: 18px; }
@@ -365,16 +375,19 @@ kbd { font: inherit; font-size: .8em; line-height: 1.4; padding: 0 4px; margin-l
       <label><input type="radio" name="turn" value="w"> 白</label>
       <label><input type="radio" name="turn" value="b"> 黑</label>
     </div>
-    <div id="solbox">
-      <label for="soltext">解答着法（改完按「保存修正」，保存前会先验证能否重放）</label>
-      <textarea id="soltext" spellcheck="false" rows="3"></textarea>
-    </div>
     <div class="actions">
       <button id="ok" onclick="save('ok')">✓ 正确 <kbd>Enter</kbd></button>
       <button id="fix" onclick="save('fixed')">保存修正</button>
       <button id="skip" onclick="nav(1)">忽略跳过 <kbd>→</kbd></button>
     </div>
-    <div id="moves"></div>
+    <div id="solbox">
+      <div id="solhead">
+        <span>解答</span>
+        <button type="button" id="soledit" onclick="editSolution()">编辑</button>
+      </div>
+      <div id="solview"></div>
+      <textarea id="soltext" spellcheck="false" rows="4"></textarea>
+    </div>
   </div>
 </div>
 <script>
@@ -455,7 +468,6 @@ function show() {
   document.getElementById('fen').value = it.fen;
   board = fenToBoard(it.fen) || {};
   document.querySelectorAll('input[name=turn]').forEach(x => x.checked = x.value === it.to_move);
-  document.getElementById('moves').textContent = it.moves ? '解答: ' + it.moves : '(无解答)';
   const pv = it.prov || {};
   let provHtml =
     `<b>置信档:</b> ${it.tier || '?'}<br><b>FEN 来源:</b> ${pv.fen || '?'}<br><b>验证:</b> ${pv.verify || '?'}<br><b>解答:</b> ${pv.moves || '?'}`;
@@ -483,12 +495,23 @@ function show() {
       board = fenToBoard(c.fen) || board; sel = null; setDirty(true); drawBoard(); };
     cd.appendChild(b);
   }
-  // the solution editor only appears when the mainline actually fails
-  const solbox = document.getElementById('solbox');
+  // one solution area: read-only until 「编辑」 is pressed
   solOriginal = it.eff_moves || '';
   document.getElementById('soltext').value = solOriginal;
-  solbox.style.display = it.breaks_at ? 'block' : 'none';
+  document.getElementById('solview').textContent = solOriginal || '(无解答)';
+  showSolutionEditor(false);
   drawBoard(); drawPalette(); setDirty(false);
+}
+function showSolutionEditor(on) {
+  document.getElementById('soltext').style.display = on ? 'block' : 'none';
+  document.getElementById('solview').style.display = on ? 'none' : 'block';
+  document.getElementById('soledit').textContent = on ? '取消编辑' : '编辑';
+}
+function editSolution() {
+  const on = document.getElementById('soltext').style.display === 'none';
+  showSolutionEditor(on);
+  if (on) document.getElementById('soltext').focus();
+  else { document.getElementById('soltext').value = solOriginal; setDirty(false); }
 }
 function applyFilter() {
   const f = document.getElementById('filter').value;
@@ -504,8 +527,8 @@ async function save(verdict) {
   const turn = document.querySelector('input[name=turn]:checked')?.value || it.to_move;
   const body = { id: it.id, verdict, fen, to_move: turn, book: currentBook() };
   const st = document.getElementById('soltext');
-  if (document.getElementById('solbox').style.display !== 'none'
-      && st.value.trim() && st.value.trim() !== solOriginal.trim()) {
+  if (st.style.display !== 'none' && st.value.trim()
+      && st.value.trim() !== solOriginal.trim()) {
     body.moves = st.value.trim();
   }
   const r = await fetch('/api/save', { method: 'POST', body: JSON.stringify(body) });

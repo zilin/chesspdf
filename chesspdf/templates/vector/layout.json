@@ -1,0 +1,24 @@
+{
+  "exercise_pages": [
+    1,
+    18
+  ],
+  "solution_pages": [
+    18,
+    21
+  ],
+  "detect_zoom": 2.0,
+  "crop_zoom": 2.5,
+  "ink_threshold": 160,
+  "min_border_run": 120,
+  "cell": {
+    "dx0": -20,
+    "dy0": -28,
+    "dx1": 20,
+    "dy1": 40
+  },
+  "expected_ids": [
+    1,
+    100
+  ]
+}

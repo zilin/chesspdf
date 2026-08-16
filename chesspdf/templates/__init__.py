@@ -7,9 +7,14 @@ Families (each fully worked on a finished book):
 - borndigital: boards are TEXT in a diagram font (zero API calls).
   Drivers: ingest.py (vector-anchored grid), fens.py (textboard decode),
   solutions.py (bold=mainline span parsing).
-- scanned: vision pipeline. Drivers: ingest.py (CV board-border detection),
-  recognize.py (flash square-listing reads), solutions_ocr.py (per-page OCR
-  with cross-page stitching), rebuild.sh (bundle -> 4 PGNs).
+- vector: born-digital, but the diagrams are vector drawings rather than a
+  font — the common modern PDF. Text (headers, hints, solutions) is read
+  straight from the text layer and only the boards go to a model.
+  Drivers: ingest.py (CV board-border detection), recognize.py, solutions.py
+  (text-layer parse, no OCR), rebuild.sh.
+- scanned: no text layer at all; everything visual. Drivers: ingest.py (CV
+  board-border detection), recognize.py (flash square-listing reads),
+  solutions_ocr.py (per-page OCR with cross-page stitching), rebuild.sh.
 
 The copied layout.json holds the previous book's numbers as a worked
 example — refit every value to the new book (see the onboard-book skill).
