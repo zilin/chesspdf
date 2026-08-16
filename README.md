@@ -52,7 +52,8 @@ The `plugin/` directory packages this workflow as an **agent skill**
 the CLI once, copy one directory into your agent host, then just say *"use
 onboard-book to convert mybook.pdf"*. The agent probes the PDF, picks a
 pipeline, tunes layout parameters against the built-in verification oracle,
-and hands you only the residue. See [`plugin/INSTALL.md`](plugin/INSTALL.md).
+and hands you only the residue. See
+[`plugin/INSTALL.md`](https://github.com/zilin/chesspdf/blob/main/plugin/INSTALL.md).
 
 ## Legal
 
@@ -63,10 +64,10 @@ code only — no book content.
 
 ## More
 
-- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — pipeline internals, the
-  bundle state machine, measured lessons (error taxonomy, prompt A/B results,
-  CV cross-check accuracy)
-- [`plugin/skills/onboard-book/SKILL.md`](plugin/skills/onboard-book/SKILL.md)
+- [`docs/DEVELOPMENT.md`](https://github.com/zilin/chesspdf/blob/main/docs/DEVELOPMENT.md)
+  — pipeline internals, the bundle state machine, measured lessons (error
+  taxonomy, prompt A/B results, CV cross-check accuracy)
+- [`plugin/skills/onboard-book/SKILL.md`](https://github.com/zilin/chesspdf/blob/main/plugin/skills/onboard-book/SKILL.md)
   — the distilled onboarding playbook agents follow
 
 MIT © Zilin Du

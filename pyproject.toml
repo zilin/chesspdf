@@ -28,6 +28,11 @@ dependencies = [
     "svglib",
 ]
 
+[project.urls]
+Homepage = "https://github.com/zilin/chesspdf"
+Repository = "https://github.com/zilin/chesspdf"
+Issues = "https://github.com/zilin/chesspdf/issues"
+
 [project.scripts]
 chesspdf = "chesspdf.cli:main"
 
