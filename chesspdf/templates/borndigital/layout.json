@@ -1,0 +1,54 @@
+{
+  "zoom": 2.2,
+  "anchor_size": [
+    18,
+    25
+  ],
+  "anchor_items": 4,
+  "column_split": 0.4,
+  "cell": {
+    "dx0": -2,
+    "dy0": -27,
+    "dy1": 166
+  },
+  "side": {
+    "font": "Wingdings3",
+    "glyphs": {
+      "\uf071": "b",
+      "\uf072": "w"
+    }
+  },
+  "board": {
+    "font": "Merida",
+    "row_bucket": 6
+  },
+  "solutions": {
+    "pages": [
+      224,
+      380
+    ],
+    "exclude_fonts": [
+      "Merida",
+      "Wingdings"
+    ],
+    "max_body_size": 13,
+    "furniture": [
+      "^\\d+$",
+      "^The Woodpecker Method$",
+      "^Solutions to ",
+      "^Chapter \\d+$"
+    ],
+    "figurines": {
+      "\u00a2": "K",
+      "\u00a3": "Q",
+      "\u00a6": "R",
+      "\u00a5": "B",
+      "\u00a4": "N",
+      "\u2020": "+",
+      "\u2021": "#",
+      "\uf0fc": "",
+      "\t": " ",
+      "\u2011": "-"
+    }
+  }
+}

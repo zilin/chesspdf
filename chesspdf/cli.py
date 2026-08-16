@@ -161,6 +161,7 @@ def main() -> None:
 
     for name, module, help_ in (
             ("probe", "chesspdf.probe", "inspect a PDF / render pages / book state (JSON)"),
+            ("template", "chesspdf.templates", "scaffold a book folder from a pipeline template"),
             ("audit", "chesspdf.audit", "consistency audit (replay verification)"),
             ("fix-fens", "chesspdf.fix_fens", "re-recognize + repair failing FENs"),
             ("fix-moves", "chesspdf.fix_moves", "gap-fill + re-OCR broken solutions"),

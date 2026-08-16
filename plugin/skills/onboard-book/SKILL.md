@@ -52,7 +52,9 @@ magic numbers in scripts.
 
 **A. Born-digital with a diagram font** (`born_digital: true` and a
 `diagram_font_candidates` entry like Chess-Merida): boards are TEXT.
-Zero vision calls needed. Copy `books/woodpecker/*.py` as thin drivers:
+Zero vision calls needed. `chesspdf template borndigital books/<name>`
+scaffolds the drivers (the copied layout.json is a worked example — refit
+every number to this book):
 - anchors + cells + numbering: `chesspdf.pagegrid` (layout.json holds anchor
   size, column split, cell offsets, side-glyph font/map)
 - board decode: `chesspdf.textboard` (Marroquin PUA encoding; handles span
@@ -60,7 +62,8 @@ Zero vision calls needed. Copy `books/woodpecker/*.py` as thin drivers:
 - solutions: parse text spans (bold = mainline is a common house style)
 
 **B. Scanned** (`born_digital: false`, full-page images): vision pipeline.
-Copy `books/mastering/*.py` as thin drivers:
+`chesspdf template scanned books/<name>` scaffolds the drivers (refit
+layout.json to this book):
 - ingest: CV board-border detection (long dark runs per page half), cell =
   header + board + hint crop
 - recognize: ONE flash call per cell returning header id/side + hint +

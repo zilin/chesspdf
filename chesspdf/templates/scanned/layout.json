@@ -1,0 +1,27 @@
+{
+  "exercise_pages": [301, 367],
+  "solution_pages": [367, 482],
+  "detect_zoom": 2.0,
+  "crop_zoom": 2.5,
+  "ink_threshold": 160,
+  "min_border_run": 125,
+  "cell": {"dx0": -26, "dy0": -35, "dx1": 26, "dy1": 42},
+  "expected_ids": [1, 382],
+  "chapters": {
+    "1-20": "The bishop", "21-40": "The knight", "41-60": "The rook",
+    "61-69": "The queen", "70-81": "The king", "82-90": "The bishop pair",
+    "91-96": "Exchanges - material advantage",
+    "97-104": "Exchanges - positional advantage",
+    "105-114": "Exchanges - key pieces", "115-126": "Exchanges - attack",
+    "127-136": "Exchanges - defence", "137-148": "Exchanges - activity",
+    "149-154": "Series of exchanges", "155-162": "Dynamic exchanges",
+    "163-174": "Gaining space", "175-192": "Creating weaknesses",
+    "193-208": "Passed pawns", "209-218": "Pawn majorities",
+    "219-228": "Pawn chains", "229-246": "Dynamics",
+    "247-266": "Restriction", "267-286": "Prophylaxis",
+    "287-306": "Provocation", "307-314": "Weak squares",
+    "315-324": "Weak pawns", "325-334": "Doubled pawns",
+    "335-350": "Blockade", "351-366": "The initiative",
+    "367-382": "The link between tactics and strategy"
+  }
+}

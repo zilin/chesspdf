@@ -16,22 +16,20 @@ You do **not** copy the whole repository into your agent host — only the
 ## 1. Install the engine (all hosts, once)
 
 ```sh
-uv tool install /path/to/chess-tools     # or: pipx install /path/to/chess-tools
+uv tool install chesspdf                 # or: pipx install chesspdf
 chesspdf --help                          # verify
 ```
 
-(Once published to PyPI this becomes `uv tool install chesspdf`.)
+(For development, install from a checkout instead:
+`uv tool install /path/to/chesspdf`.)
 
 Scanned books need a Gemini API key:
 
 ```sh
-export GEMINI_API_KEY=...                # or put it in the repo-root .env
+export GEMINI_API_KEY=...                # or put it in a .env in your working dir
 ```
 
-Notes:
-- Born-digital books (text-layer boards) run with **zero** API calls.
-- `chesspdf review` (the human review web app) currently runs from a repo
-  checkout, not the installed tool.
+Born-digital books (text-layer boards) run with **zero** API calls.
 
 ## 2. Install the knowledge, per host
 
