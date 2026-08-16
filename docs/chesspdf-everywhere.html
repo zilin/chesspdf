@@ -1,0 +1,336 @@
+<title>Chesspdf Everywhere</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #22261F;
+    --muted: #6B7265;
+    --accent: #2E6B45;
+    --accent-soft: #EAF1EB;
+    --amber: #9A6A1F;
+    --amber-soft: #F6EEDD;
+    --line: #E3E5DD;
+    --card: #FFFFFF;
+    --code-bg: #F1F2EC;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #151814;
+      --ink: #E6E8E0;
+      --muted: #98A091;
+      --accent: #74C094;
+      --accent-soft: #1E2B22;
+      --amber: #D9A24E;
+      --amber-soft: #2B2416;
+      --line: #2A2E27;
+      --card: #1B1F1A;
+      --code-bg: #21251F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #151814;
+    --ink: #E6E8E0;
+    --muted: #98A091;
+    --accent: #74C094;
+    --accent-soft: #1E2B22;
+    --amber: #D9A24E;
+    --amber-soft: #2B2416;
+    --line: #2A2E27;
+    --card: #1B1F1A;
+    --code-bg: #21251F;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    margin: 0;
+    padding: 0 24px;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 56px 0 96px; }
+
+  h1, h2, h3 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", Georgia, serif;
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 { font-size: 2.4rem; font-weight: 600; letter-spacing: -0.01em; }
+  h2 { font-size: 1.5rem; font-weight: 600; margin: 0 0 14px; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 26px 0 8px; }
+
+  .kicker {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+  }
+  .lede { color: var(--muted); font-size: 1.05rem; max-width: 62ch; margin: 14px 0 0; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  section { margin-top: 64px; }
+  .secnum {
+    font-family: "Iowan Old Style", Palatino, Georgia, serif;
+    color: var(--accent); font-size: 0.95rem; font-weight: 600;
+    letter-spacing: 0.08em; margin-bottom: 4px;
+  }
+  p { max-width: 68ch; margin: 0 0 14px; }
+  ul, ol { max-width: 66ch; padding-left: 1.3em; margin: 0 0 14px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--accent); }
+
+  code, pre {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+  }
+  code { background: var(--code-bg); padding: 0.12em 0.4em; border-radius: 4px; }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 16px 18px; overflow-x: auto;
+    line-height: 1.6; margin: 16px 0;
+  }
+  pre code { background: none; padding: 0; }
+
+  strong { font-weight: 650; }
+  .accent { color: var(--accent); }
+  a { color: var(--accent); }
+
+  /* layered architecture diagram */
+  .stack { display: flex; flex-direction: column; gap: 10px; margin: 22px 0 8px; }
+  .layer {
+    display: grid; grid-template-columns: 88px 1fr; gap: 16px;
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 14px 18px; align-items: baseline;
+  }
+  .layer.knowledge { border-left-color: var(--amber); }
+  .layer .tag {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.8rem; font-weight: 600; color: var(--accent);
+  }
+  .layer.knowledge .tag { color: var(--amber); }
+  .layer h4 { margin: 0 0 2px; font-size: 0.98rem; font-weight: 650; }
+  .layer p { margin: 0; font-size: 0.9rem; color: var(--muted); max-width: none; }
+
+  /* ladder */
+  .ladder { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  .rung {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; padding: 16px 18px;
+  }
+  .rung .lvl {
+    display: inline-block; font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--accent); background: var(--accent-soft);
+    border-radius: 99px; padding: 2px 10px; margin-bottom: 8px;
+  }
+  .rung.l2 .lvl { color: var(--amber); background: var(--amber-soft); }
+  .rung h4 { margin: 0 0 6px; font-size: 0.95rem; }
+  .rung p { font-size: 0.86rem; color: var(--muted); margin: 0; max-width: none; }
+
+  /* tables */
+  .tablewrap { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; background: var(--card); }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); font-weight: 650; white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  .pill {
+    display: inline-block; font-size: 0.78rem; font-weight: 600;
+    border-radius: 99px; padding: 1px 10px; white-space: nowrap;
+  }
+  .pill.yes { color: var(--accent); background: var(--accent-soft); }
+  .pill.via { color: var(--amber); background: var(--amber-soft); }
+  .pill.no { color: var(--muted); background: var(--code-bg); }
+  td small { color: var(--muted); }
+
+  .note {
+    border: 1px solid var(--line); border-left: 3px solid var(--amber);
+    background: var(--card); border-radius: 8px;
+    padding: 12px 18px; margin: 18px 0; font-size: 0.92rem;
+  }
+  .note p { margin: 0; max-width: none; }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+           color: var(--muted); font-size: 0.83rem; }
+  @media (max-width: 640px) {
+    .ladder { grid-template-columns: 1fr; }
+    .layer { grid-template-columns: 1fr; gap: 4px; }
+    h1 { font-size: 1.9rem; }
+  }
+</style>
+
+<main>
+<header>
+  <div class="kicker">Design · chess-tools / chesspdf</div>
+  <h1>Chesspdf Everywhere</h1>
+  <p class="lede">把「棋书 PDF → 回放验证过的 PGN」做成一个宿主无关的 agent 能力:一份核心,任何 agent(Claude Code、Codex、Antigravity、pi……)都能跑,用户只需要一个 Gemini API key。</p>
+  <p class="meta"><b>状态</b> 草案 v1 · 2026-08-15 &nbsp;·&nbsp; <b>依据</b> 三本书实测(Imagination 756 题 / Woodpecker 1128 题 / Mastering 382 题)+ Agent Plugins 1.0 规范(2026-08-06)</p>
+</header>
+
+<section>
+  <div class="secnum">1</div>
+  <h2>目标与约束</h2>
+  <ul>
+    <li><strong>自主上书</strong>:给一本新棋书 PDF,agent 自己完成探查 → 选模板 → 调参 → 提取 → 验证 → 出 PGN,人工只处理残余队列。</li>
+    <li><strong>零 Claude 依赖的运行时</strong>:目标用户没有 Claude 订阅。chesspdf 引擎今天已只依赖 Gemini(识别 / re-OCR / 仲裁全走 <code>GEMINI_API_KEY</code>);本设计把「驱动循环的大脑」也开放为任意宿主 + 任意模型。</li>
+    <li><strong>一份源,多宿主</strong>:领域知识(playbook)、工具面、模板库只维护一份;每个宿主只有一层薄适配。</li>
+    <li><strong>验证优先</strong>:一切产出以「书中解答能在识别出的局面上合法回放」为准——这是领域内建的 oracle,也是自主化可行的根本原因。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="secnum">2</div>
+  <h2>分层架构</h2>
+  <p>核心判断:<strong>宿主差异只存在于最外层</strong>。知识层用事实标准(SKILL.md / AGENTS.md),工具层只用最大公约数(CLI + JSON,不做 MCP),两层都与宿主无关。</p>
+  <div class="stack">
+    <div class="layer knowledge">
+      <span class="tag">L4 适配</span>
+      <div><h4>宿主打包</h4><p>Claude Code plugin · Agent Plugins 1.0 目录(Codex/ChatGPT/Cursor/Copilot/VS Code/Kiro)· Antigravity plugin · pi package。全部由同一份源生成,详见 §6。</p></div>
+    </div>
+    <div class="layer knowledge">
+      <span class="tag">L3 知识</span>
+      <div><h4>Playbook(SKILL.md + AGENTS.md)</h4><p>上书决策树、陷阱表(双写文本层 / span 空格丢失 / 误印锚点号…)、prompt 教训、验证纪律。SKILL.md 已是 Claude Code / Codex / pi / Antigravity 共同识别的事实标准。</p></div>
+    </div>
+    <div class="layer">
+      <span class="tag">L2 工具面</span>
+      <div><h4>chesspdf CLI(JSON 输出)——唯一工具面</h4><p>任何能执行 shell 的 agent 的最大公约数。工具用法由 SKILL.md 与 <code>chesspdf --help</code> 教给模型(pi 的 CLI+README 哲学)。<strong>不做 MCP</strong>:省掉一个协议层、一个常驻进程和每会话的工具 schema token 开销;若未来某宿主确有需要,MCP 只是对同一 CLI 的一层封装,随时可补。</p></div>
+    </div>
+    <div class="layer">
+      <span class="tag">L1 引擎</span>
+      <div><h4>chesspdf Python 包</h4><p>管线模板(born-digital 网格 / 扫描网格)、插槽契约、oracle(回放验证)、修复级联(fix_fens / fix_moves / fix_shifts)、bundle 状态机、review_app。只依赖 Gemini。</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="secnum">3</div>
+  <h2>自主上书循环与升级阶梯</h2>
+  <p>Agent 的工作被架构刻意降级:<strong>从「开放式编程」降到「对着 oracle 的参数搜索」</strong>。每一步都有客观反馈(锚点数 = 目录题数?回放率多少?),中档模型即可稳定完成大多数书。</p>
+  <pre><code>probe → 判型(born-digital / 扫描) → 选模板 → 拟合 layout.json
+      → ingest(锚点数 ≟ 目录题数,不等则回退调参)
+      → recognize + solutions OCR → audit(回放率)
+      → fix 级联 → 收敛 → assemble → 残余进人工队列</code></pre>
+  <div class="ladder">
+    <div class="rung">
+      <span class="lvl">L0 · 模板 + 参数</span>
+      <h4>大多数书</h4>
+      <p>选管线模板,拟合 layout.json(锚点尺寸、分栏、单元格边距…)。出版社排版系统高度复用(Everyman、Quality Chess、Gambit…),几十个模板覆盖市场主体。</p>
+    </div>
+    <div class="rung">
+      <span class="lvl">L1 · 插槽小函数</span>
+      <h4>变体书</h4>
+      <p>在签名固定的插槽内写 30–80 行函数:锚点探测器(页 → 格子)、棋盘解码器(格 → FEN)、解答切分器(页 → 题号+着法)。每个插槽有 oracle 可打分的合同测试。</p>
+    </div>
+    <div class="rung l2">
+      <span class="lvl">L2 · 专家模式</span>
+      <h4>新形态书</h4>
+      <p>超出插槽范式时诚实上报,附探查报告。交给前沿 coding agent 或人,通过同一套接口(探查报告 + 插槽契约 + oracle)介入;<strong>产物固化为新模板,下个版本降为 L0</strong>。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="secnum">4</div>
+  <h2>工具面规格</h2>
+  <p>所有工具 JSON-in / JSON-out、幂等、可续跑(仓库既有惯例)。图片走<strong>「写文件、返回路径」</strong>约定——宿主用自己的文件读取能力看图,对纯 CLI 工具面这是唯一自然、也是最可移植的多模态通道。放弃 MCP 的代价只有一个:宿主无法自动发现工具与参数 schema,可发现性全押在 SKILL.md 和 <code>--help</code> 的质量上——所以这两者按接口文档的标准维护,并纳入 CI。</p>
+  <div class="tablewrap"><table>
+    <tr><th>工具</th><th>作用</th><th>关键输出</th></tr>
+    <tr><td><code>probe</code></td><td>判型:文本层有无、字体清单、每页 drawings/图像统计、候选题目页</td><td><code>{born_digital, fonts[], candidate_pages[]}</code></td></tr>
+    <tr><td><code>render</code></td><td>渲染页面/单元格为 PNG,供 agent 看版式、调参</td><td><code>{path, page, dpi}</code></td></tr>
+    <tr><td><code>layout set/get</code></td><td>读写 layout.json 参数(模板选择 + 全部书调优数值)</td><td>diff 后的完整 profile</td></tr>
+    <tr><td><code>run &lt;stage&gt;</code></td><td>ingest / recognize / solutions / audit / fix-fens / fix-moves / verify / assemble</td><td>阶段统计,如 <code>{detected: 382, expected: 382}</code></td></tr>
+    <tr><td><code>report</code></td><td>当前回放率、状态分布、失败题清单(audit_report 的浓缩)</td><td><code>{ok, illegal, var_only, …}</code></td></tr>
+    <tr><td><code>review queue</code></td><td>导出残余题给人工(review_app 或静态清单)</td><td>题号 + 图 + 候选 FEN</td></tr>
+  </table></div>
+  <p>其中 <code>probe / render / report</code> 为本设计新增;其余是现有 CLI 的 JSON 化收口。</p>
+</section>
+
+<section>
+  <div class="secnum">5</div>
+  <h2>宿主适配矩阵</h2>
+  <div class="tablewrap"><table>
+    <tr><th>宿主</th><th>SKILL.md</th><th>Shell 执行</th><th>AGENTS.md</th><th>读图</th><th>打包入口</th></tr>
+    <tr><td>Claude Code</td>
+      <td><span class="pill yes">原生</span></td><td><span class="pill yes">Bash</span></td>
+      <td><span class="pill yes">原生</span></td><td><span class="pill yes">Read</span></td>
+      <td>Claude Code plugin(仅 skills)</td></tr>
+    <tr><td>Codex CLI</td>
+      <td><span class="pill yes">原生</span></td><td><span class="pill yes">原生</span></td>
+      <td><span class="pill yes">原生</span></td><td><span class="pill yes">多模态</span></td>
+      <td>Agent Plugins 1.0 目录(plugin.json + skills/,<code>mcp.json</code> 为可选项,直接省略)</td></tr>
+    <tr><td>Antigravity CLI <small>(agy)</small></td>
+      <td><span class="pill yes">.agents/skills</span></td><td><span class="pill yes">原生</span></td>
+      <td><span class="pill yes">GEMINI.md/AGENTS.md</span></td><td><span class="pill yes">Gemini 多模态</span></td>
+      <td>skills 目录 + AGENTS.md,无需 plugin 机制</td></tr>
+    <tr><td>pi</td>
+      <td><span class="pill yes">原生<small>(与 CC/Codex 兼容)</small></span></td><td><span class="pill yes">原生</span></td>
+      <td><span class="pill yes">原生</span></td><td><span class="pill via">模型多模态</span></td>
+      <td>同一 SKILL.md + CLI——与设计取向完全一致,零适配</td></tr>
+    <tr><td>ChatGPT / Cursor / Copilot / VS Code / Kiro</td>
+      <td><span class="pill yes">经 Agent Plugins 1.0</span></td><td><span class="pill via">依宿主<small>(网页端无本地 shell,不在目标内)</small></span></td>
+      <td><span class="pill via">各家惯例</span></td><td><span class="pill via">依宿主</span></td>
+      <td>同一个 Agent Plugins 1.0 目录(skills-only)</td></tr>
+  </table></div>
+  <p>结论:<strong>CLI-only 让适配矩阵塌缩成一个问题:「skill 文件放哪里」</strong>。所有终端型宿主都能执行 shell,工具面零适配;Agent Plugins 1.0 的 <code>mcp.json</code> 本就是可选字段,skills-only 的插件目录完全合规。目标宿主是终端型 agent;无本地 shell 的网页端宿主(如 ChatGPT 网页)不在支持范围,这是自觉的取舍而非遗漏。</p>
+</section>
+
+<section>
+  <div class="secnum">6</div>
+  <h2>仓库与打包布局</h2>
+  <pre><code>chesspdf/                    # L1 引擎 + L2 CLI(pip 包)
+plugin/
+├── skills/onboard-book/
+│   └── SKILL.md             # L3 playbook,唯一事实源
+├── AGENTS.md                # 项目级上下文(决策树摘要 + 纪律)
+├── plugin.json              # Agent Plugins 1.0 manifest(skills-only)
+└── adapters/
+    ├── claude-code/         # 由 CI 从上述源生成(仅是目录结构差异)
+    ├── antigravity/         #   └─ .agents/skills/ + AGENTS.md
+    └── pi/                  #   └─ 原样复用,零转换</code></pre>
+  <ul>
+    <li><strong>单一事实源</strong>:SKILL.md 只写一份;各 adapter 由脚本生成(CLI-only 后只剩目录搬运),CI 校验漂移。</li>
+    <li><strong>知识/能力边界</strong>:skill 里不出现任何宿主特有指令;工具输出自描述,不假设驱动模型是谁。守住这条线,「换宿主」永远只是换壳。</li>
+    <li>Agent Plugins 1.0 的已知空白(无签名/密钥管理/沙箱)对本场景可接受:工具是本地 CLI,唯一密钥是用户自己的 <code>GEMINI_API_KEY</code>,由宿主环境变量传入。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="secnum">7</div>
+  <h2>Self-improvement 闭环</h2>
+  <p>人工复核(review_app)产生的 verdicts 即新标签,回流三份真值集(756 / 1128 / 382,恰好覆盖三种书籍形态)。任何改进提案——prompt 调整、参数默认值、新模板——必须在真值集上回测过门槛(回放率不降、人工推翻率不升)才能合入。</p>
+  <div class="note"><p><strong>纪律先于机制</strong>:项目自己的 prompt 教训表证明,没有评测集守门的「自我改进」会变糟(v2 自检 −7 分、v3 奇偶校验 −22 分)。飞轮的本质不是运行时变聪明,而是<strong>贵的智能的工作成果不断编译进便宜的运行时</strong>:模板库、playbook、插槽契约、评测集四样编译产物。</p></div>
+</section>
+
+<section>
+  <div class="secnum">8</div>
+  <h2>验证计划与开放问题</h2>
+  <h3>上书评测(每本新书记录)</h3>
+  <ul>
+    <li>模板命中(L0 / L1 / L2)· 参数迭代轮数 · <strong>人工干预次数</strong>(北极星指标)· 最终回放率 · 残余队列大小 · token 成本</li>
+    <li>验收线:L0 书零干预跑通 ≥ 2 本,才投资 M3;否则把钱砸在卡住的那个插槽的工具化上。</li>
+  </ul>
+  <h3>开放问题</h3>
+  <ul>
+    <li>Antigravity headless / 脚本模式未见文档,发布前实测;闭源二进制带来 vendor 风险(退路:pi 或 ~300 行自研循环)。</li>
+    <li>L1 插槽内让中档模型写小函数的实际成功率——需要第四、第五本书的数据。</li>
+    <li>Agent Plugins 1.0 尚无 Claude Code / Antigravity 官方支持声明,adapter 生成层短期内不可省。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="secnum">9</div>
+  <h2>里程碑</h2>
+  <div class="tablewrap"><table>
+    <tr><th>阶段</th><th>交付</th><th>验收</th></tr>
+    <tr><td>M0 · Playbook</td><td>onboard-book SKILL.md(仓库本地)+ <code>probe</code> 工具;素材取自三本书全过程记录</td><td>第四本书在 Claude Code 中按 skill 跑,数出干预点</td></tr>
+    <tr><td>M1 · 工具面收口</td><td>CLI 全面 JSON 化 + probe/render/report 三个新命令;<code>--help</code> 按接口文档标准重写</td><td>skill 仅凭 CLI + --help 可驱动全流程,无宿主特有指令</td></tr>
+    <tr><td>M2 · 多宿主打包</td><td>Agent Plugins 1.0 目录(skills-only)+ Claude Code / Antigravity adapter 生成脚本(pi 零转换)</td><td>同一本书在 ≥3 个宿主上零改动跑通 L0 流程</td></tr>
+    <tr><td>M3 · 自研循环<small>(条件触发)</small></td><td>~300 行 Python 循环(google-genai function calling),仅当宿主矩阵证明不足</td><td>由 M2 评测数据决定是否立项</td></tr>
+  </table></div>
+</section>
+
+<footer>chess-tools · chesspdf — 设计草案,配套实测数据见仓库 AGENTS.md 与三本书的 bundle 记录。</footer>
+</main>

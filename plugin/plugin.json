@@ -1,0 +1,5 @@
+{
+  "name": "chesspdf",
+  "version": "0.1.0",
+  "description": "Chess book PDF -> replay-verified PGN, autonomously (needs a Gemini API key)"
+}
