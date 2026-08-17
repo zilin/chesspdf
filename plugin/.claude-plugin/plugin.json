@@ -1,0 +1,13 @@
+{
+  "name": "chesspdf",
+  "displayName": "chesspdf",
+  "version": "0.2.1",
+  "description": "Turn a chess book PDF into replay-verified PGN. Requires the chesspdf CLI (uv tool install chesspdf) and, for scanned books, GEMINI_API_KEY.",
+  "author": {
+    "name": "Zilin Du"
+  },
+  "homepage": "https://github.com/zilin/chesspdf",
+  "repository": "https://github.com/zilin/chesspdf",
+  "license": "MIT",
+  "keywords": ["chess", "pgn", "pdf", "ocr"]
+}

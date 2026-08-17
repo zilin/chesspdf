@@ -1,0 +1,16 @@
+{
+  "name": "chess-tools",
+  "owner": {
+    "name": "Zilin Du",
+    "url": "https://github.com/zilin"
+  },
+  "plugins": [
+    {
+      "name": "chesspdf",
+      "source": "./plugin",
+      "description": "Turn a chess book PDF into replay-verified PGN",
+      "version": "0.2.1"
+    }
+  ],
+  "description": "Chess book PDF -> replay-verified PGN: the onboard-book skill and its pipeline playbook."
+}

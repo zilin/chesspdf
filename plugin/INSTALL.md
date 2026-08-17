@@ -35,19 +35,23 @@ Born-digital books (text-layer boards) run with **zero** API calls.
 
 ### Claude Code
 
-Project-level (recommended while iterating):
+Straight from the repo — this is the whole install on a fresh machine:
+
+```
+/plugin marketplace add zilin/chesspdf
+/plugin install chesspdf@chess-tools
+```
+
+`/plugin marketplace update chess-tools` pulls later versions. Prefer HTTPS
+over SSH? `export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` first.
+
+Or copy the skill by hand, project-level while iterating:
 
 ```sh
 cp -r plugin/skills/onboard-book <your-project>/.claude/skills/
 ```
 
-Or user-level for all projects: `cp -r plugin/skills/onboard-book ~/.claude/skills/`.
-Or, if you publish this repo as a plugin marketplace:
-
-```
-/plugin marketplace add <repo-or-path>
-/plugin install chesspdf@<marketplace>
-```
+(`~/.claude/skills/` instead makes it available in every project.)
 
 ### Codex CLI (Agent Plugins 1.0)
 
