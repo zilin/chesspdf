@@ -29,7 +29,10 @@ _os.environ.setdefault("CHESSPDF_BOOK", str(Path("books/imagination").resolve())
 BOOK = Path(_os.environ["CHESSPDF_BOOK"])
 
 from chesspdf.audit import load_problems, load_solutions
-from chesspdf.chesslib import (first_mover, mainline_tokens, normalize_movetext,
+import chess
+
+from chesspdf.notation import convert_mainline, line_tokens, looks_pre_san
+from chesspdf.chesslib import (first_mover, full_fen, mainline_tokens, normalize_movetext,
                                replay_sans, san_candidates, strip_variations,
                                structural_check, transform_book_variations, try_parse)
 
@@ -118,6 +121,25 @@ def replay_audit(problems: dict[str, dict], solutions: dict[str, str]) -> dict[s
                        "detail": "" if ok else f"stops at ply {n + 1}"
                                                f" ({sans[n] if n < len(sans) else '-'})"}
     return report
+
+
+def old_notation_note(fen: str, turn: str, moves: str) -> str | None:
+    """Older books print S for knight, P-prefixed pawn moves and captures
+    without a target square ('KxR'), which no SAN parser can read. Say so,
+    and — using the converter, not a guess — say what actually blocks this
+    puzzle, so a reviewer knows whether their eyes are needed."""
+    if not looks_pre_san(moves or ""):
+        return None
+    note = ("解答是本书旧记法（S=马；兵走子带 P 前缀，如 Pd4 即 d4；"
+            "KxR=王吃车，不写目标格）")
+    if convert_mainline(fen, turn, moves):
+        return note + "，已能转成 SAN —— 下次 fix-moves 会自动修好，无需人工"
+    toks = line_tokens(moves)
+    if any(not re.match(r"^[KQRBSNPa-h]", t) or re.search(r"[^A-Za-z0-9+#=()\-]", t)
+           for t in toks):
+        return note + "，且原文有 OCR 残缺无法解析 —— 仍可只对照原图核对局面"
+    return (note + "。记法本身可解析，但从此局面走不通 —— 局面存疑，"
+            "请对照原图核对棋子（无需读解答）")
 
 
 def build_dataset(book: Path) -> list[dict]:
@@ -234,6 +256,8 @@ def build_dataset(book: Path) -> list[dict]:
             verify_prov = "✅ 解答修复后重放通过"
         if not ok and eff_moves and not breaks_at:
             verify_prov += " — 着法可重放，但整段文本无法解析为 PGN（多为粘连/评估符号），导出时退化为文本解答"
+        if (old := old_notation_note(fen, turn, eff_moves or "")) and not ok:
+            verify_prov += " — " + old
         if breaks_at:
             why = ("书中记法不完整：此局面下有 "
                    f"{breaks_at['candidates']} 个合法着法都写作这一步（需 R8e7 式消歧）"

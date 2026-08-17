@@ -28,6 +28,7 @@ import chess
 from .audit import load_env, load_problems, load_solutions, solution_key
 from .chesslib import (SAN_RE, disambiguate_line, first_mover, mainline_tokens,
                        rebuild_movetext, replay_sans, tail_replays)
+from .notation import convert_mainline, looks_pre_san
 
 HERE = Path(os.environ.get("CHESSPDF_BOOK", "books/imagination")).resolve()
 OUT = HERE / "moves_fixes.jsonl"
@@ -196,10 +197,17 @@ def main() -> None:
         sans = mainline_tokens(moves)
         rec = {"id": pid, "fen": fen, "to_move": turn}
 
+        # older books are not written in SAN at all (S for knight, P-prefixed
+        # pawn moves, 'KxR' captures); read those into SAN first
+        pre = ""
+        if looks_pre_san(moves):
+            converted = convert_mainline(fen, turn, moves)
+            if converted:
+                sans, pre = converted, "converted pre-SAN notation; "
+
         # printed SAN is often under-disambiguated ('Re7' with two rooks
         # reaching e7); resolve before any repair so later passes see a
         # strictly legal line
-        pre = ""
         resolved = disambiguate_line(fen, turn, sans)
         if resolved is not None and resolved != sans:
             sans, pre = resolved, "disambiguated printed SAN; "
