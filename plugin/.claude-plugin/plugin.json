@@ -9,5 +9,10 @@
   "homepage": "https://github.com/zilin/chesspdf",
   "repository": "https://github.com/zilin/chesspdf",
   "license": "MIT",
-  "keywords": ["chess", "pgn", "pdf", "ocr"]
+  "keywords": [
+    "chess",
+    "pgn",
+    "pdf",
+    "ocr"
+  ]
 }
